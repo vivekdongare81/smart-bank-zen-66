@@ -171,13 +171,13 @@ export const getCurrentUser = (): User | null => {
   }
 };
 
-export const setCurrentUser = (user: User | null): void => {
+export function setCurrentUser(user: User | null): void {
   if (user) {
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
   } else {
     localStorage.removeItem(STORAGE_KEYS.USER);
   }
-};
+}
 
 // Credit Cards
 export const getCreditCardApplications = (): CreditCardApplication[] => 
