@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { TransactionList } from "@/components/TransactionList";
+import { transactions as transactionsData } from "@/data/transactions";
 
 function setSEO(title: string, description: string) {
   document.title = title;
@@ -32,7 +33,7 @@ export default function Transactions() {
         <h1 className="text-3xl font-bold">Transactions</h1>
         <p className="text-muted-foreground">Review your recent account activity</p>
       </header>
-      <TransactionList />
+      <TransactionList items={transactionsData} />
     </section>
   );
 }

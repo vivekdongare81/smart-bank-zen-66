@@ -1,0 +1,55 @@
+import { ArrowDownLeft, Car, Coffee, ShoppingBag, Smartphone } from "lucide-react";
+import type { TransactionItem } from "@/components/TransactionList";
+
+export const transactions: TransactionItem[] = [
+  {
+    id: 1,
+    type: "expense",
+    description: "Starbucks Coffee",
+    category: "Food & Dining",
+    amount: 450,
+    date: "Today, 2:30 PM",
+    icon: Coffee,
+    merchant: "Starbucks India",
+  },
+  {
+    id: 2,
+    type: "income",
+    description: "Salary Credit",
+    category: "Income",
+    amount: 85000,
+    date: "Yesterday, 9:00 AM",
+    icon: ArrowDownLeft,
+    merchant: "Tech Corp Ltd.",
+  },
+  {
+    id: 3,
+    type: "expense",
+    description: "Uber Ride",
+    category: "Transportation",
+    amount: 280,
+    date: "Yesterday, 6:45 PM",
+    icon: Car,
+    merchant: "Uber India",
+  },
+  {
+    id: 4,
+    type: "expense",
+    description: "Amazon Purchase",
+    category: "Shopping",
+    amount: 1299,
+    date: "2 days ago",
+    icon: ShoppingBag,
+    merchant: "Amazon.in",
+  },
+  {
+    id: 5,
+    type: "expense",
+    description: "Mobile Recharge",
+    category: "Bills & Utilities",
+    amount: 599,
+    date: "3 days ago",
+    icon: Smartphone,
+    merchant: "Jio Prepaid",
+  },
+];

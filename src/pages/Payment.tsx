@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-
+import { TransactionList } from "@/components/TransactionList";
+import { paymentTransactions } from "@/data/payment";
 function setSEO(title: string, description: string) {
   document.title = title;
   const metaDesc = document.querySelector('meta[name="description"]');
@@ -75,6 +76,9 @@ export default function Payment() {
           </form>
         </CardContent>
       </Card>
+      <div className="mt-6">
+        <TransactionList items={paymentTransactions} />
+      </div>
     </section>
   );
 }

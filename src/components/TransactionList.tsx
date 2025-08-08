@@ -1,8 +1,20 @@
 import { Card } from "@/components/ui/card";
+import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, ArrowDownLeft, Coffee, Car, ShoppingBag, Smartphone } from "lucide-react";
 
-export const TransactionList = () => {
-  const transactions = [
+export type TransactionItem = {
+  id: number;
+  type: "income" | "expense";
+  description: string;
+  category: string;
+  amount: number;
+  date: string;
+  icon: LucideIcon;
+  merchant: string;
+};
+
+export const TransactionList = ({ items }: { items?: TransactionItem[] }) => {
+  const transactions: TransactionItem[] = items ?? [
     {
       id: 1,
       type: "expense",
