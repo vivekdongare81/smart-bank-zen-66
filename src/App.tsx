@@ -12,6 +12,8 @@ import Investments from "./pages/Investments";
 import Goals from "./pages/Goals";
 import ExpenseTracker from "./pages/ExpenseTracker";
 import Profile from "./pages/Profile";
+import Payment from "./pages/Payment";
+import Transactions from "./pages/Transactions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="investments" element={<Investments />} />
             <Route path="goals" element={<Goals />} />
             <Route path="expenses" element={<ExpenseTracker />} />
+            <Route path="payment" element={<Payment />} />
+            <Route path="transactions" element={<Transactions />} />
             <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
