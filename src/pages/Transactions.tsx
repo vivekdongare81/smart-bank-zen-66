@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import TransactionList from "@/components/TransactionList";
+import { TransactionList } from "@/components/TransactionList";
 
 function setSEO(title: string, description: string) {
   document.title = title;
