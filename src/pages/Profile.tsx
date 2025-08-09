@@ -3,87 +3,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Shield, 
-  Bell, 
-  CreditCard,
-  FileText,
-  Download,
-  Edit
-} from "lucide-react";
+import { User, Mail, Phone, MapPin, Briefcase, Calendar, CreditCard, Banknote } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getCurrentUser, setCurrentUser } from "@/lib/storage";
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    dateOfBirth: "",
-    occupation: "",
-    annualIncome: ""
+    name: "Raj Kumar",
+    email: "raj@example.com",
+    phone: "+91 9876543210",
+    address: "123 Main Street, Mumbai, Maharashtra 400001",
+    dateOfBirth: "1990-05-15",
+    occupation: "Software Engineer",
+    annualIncome: "10,00,000"
   });
-
-  const currentUser = getCurrentUser();
 
   useEffect(() => {
+    const currentUser = getCurrentUser();
     if (currentUser) {
       setProfile({
-        firstName: currentUser.firstName,
-        lastName: currentUser.lastName,
-        email: currentUser.email,
-        phone: currentUser.phone,
-        address: currentUser.profile?.address || "",
-        dateOfBirth: currentUser.profile?.dateOfBirth || "",
-        occupation: currentUser.profile?.employment || "",
-        annualIncome: currentUser.profile?.income || ""
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        email: currentUser.email || "raj@example.com",
+        phone: currentUser.phone || "+91 9876543210",
+        address: currentUser.profile?.address || "123 Main Street, Mumbai, Maharashtra 400001",
+        dateOfBirth: currentUser.profile?.dateOfBirth || "1990-05-15",
+        occupation: currentUser.profile?.employment || "Software Engineer",
+        annualIncome: currentUser.profile?.income || "10,00,000"
       });
     }
-  }, [currentUser]);
-
-  const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    smsAlerts: true,
-    budgetAlerts: true,
-    goalReminders: true,
-    transactionAlerts: false
-  });
-
-  const accountSummary = {
-    totalBalance: 2847650,
-    totalInvestments: 1845230,
-    activeLoans: 2,
-    creditScore: 750,
-    memberSince: "2020-03-15"
-  };
+  }, []);
 
   const handleProfileUpdate = () => {
+    const currentUser = getCurrentUser();
     if (currentUser) {
       const updatedUser = {
         ...currentUser,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        email: profile.email,
-        phone: profile.phone,
-        profile: {
-          address: profile.address,
-          dateOfBirth: profile.dateOfBirth,
-          employment: profile.occupation,
-          income: profile.annualIncome,
-          pan: currentUser.profile?.pan || ""
-        }
+        ...profile
       };
-      
       setCurrentUser(updatedUser);
       setIsEditing(false);
       toast({
@@ -93,278 +51,203 @@ const ProfilePage = () => {
     }
   };
 
-  const handleNotificationUpdate = (key: string, value: boolean) => {
-    setNotifications({ ...notifications, [key]: value });
-    toast({
-      title: "Notification Settings Updated",
-      description: `${key} ${value ? 'enabled' : 'disabled'} successfully.`
-    });
-  };
-
-  const downloadStatement = () => {
-    toast({
-      title: "Downloading Statement",
-      description: "Your account statement is being downloaded."
-    });
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           Profile
         </h1>
         <p className="text-muted-foreground mt-2">
-          Manage your account information and preferences
+          Manage your personal information and account settings
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Information */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Personal Information */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src="/placeholder-avatar.jpg" />
-                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xl">
-                      {profile.firstName[0]}{profile.lastName[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>Update your personal details</CardDescription>
-                  </div>
+      {/* Personal Information */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>Your basic profile details</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => isEditing ? handleProfileUpdate() : setIsEditing(true)}
+            >
+              {isEditing ? "Save Changes" : "Edit Profile"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              {isEditing ? (
+                <Input
+                  id="name"
+                  value={profile.name}
+                  onChange={(e) => setProfile({...profile, name: e.target.value})}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-3 bg-muted/20 rounded-md">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.name}</span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  {isEditing ? "Cancel" : "Edit"}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={profile.firstName}
-                      disabled={!isEditing}
-                      onChange={(e) => setProfile({...profile, firstName: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={profile.lastName}
-                      disabled={!isEditing}
-                      onChange={(e) => setProfile({...profile, lastName: e.target.value})}
-                    />
-                  </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              {isEditing ? (
+                <Input
+                  id="email"
+                  type="email"
+                  value={profile.email}
+                  onChange={(e) => setProfile({...profile, email: e.target.value})}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-3 bg-muted/20 rounded-md">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.email}</span>
                 </div>
+              )}
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profile.email}
-                      disabled={!isEditing}
-                      onChange={(e) => setProfile({...profile, email: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={profile.phone}
-                      disabled={!isEditing}
-                      onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                    />
-                  </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              {isEditing ? (
+                <Input
+                  id="phone"
+                  value={profile.phone}
+                  onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-3 bg-muted/20 rounded-md">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.phone}</span>
                 </div>
+              )}
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={profile.address}
-                    disabled={!isEditing}
-                    onChange={(e) => setProfile({...profile, address: e.target.value})}
-                  />
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              {isEditing ? (
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={profile.dateOfBirth}
+                  onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-3 bg-muted/20 rounded-md">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{new Date(profile.dateOfBirth).toLocaleDateString()}</span>
                 </div>
+              )}
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                    <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={profile.dateOfBirth}
-                      disabled={!isEditing}
-                      onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="occupation">Occupation</Label>
-                    <Input
-                      id="occupation"
-                      value={profile.occupation}
-                      disabled={!isEditing}
-                      onChange={(e) => setProfile({...profile, occupation: e.target.value})}
-                    />
-                  </div>
+            <div className="space-y-2">
+              <Label htmlFor="occupation">Occupation</Label>
+              {isEditing ? (
+                <Input
+                  id="occupation"
+                  value={profile.occupation}
+                  onChange={(e) => setProfile({...profile, occupation: e.target.value})}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-3 bg-muted/20 rounded-md">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.occupation}</span>
                 </div>
+              )}
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="annualIncome">Annual Income (₹)</Label>
-                  <Input
-                    id="annualIncome"
-                    type="number"
-                    value={profile.annualIncome}
-                    disabled={!isEditing}
-                    onChange={(e) => setProfile({...profile, annualIncome: e.target.value})}
-                  />
+            <div className="space-y-2">
+              <Label htmlFor="annualIncome">Annual Income</Label>
+              {isEditing ? (
+                <Input
+                  id="annualIncome"
+                  value={profile.annualIncome}
+                  onChange={(e) => setProfile({...profile, annualIncome: e.target.value})}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-3 bg-muted/20 rounded-md">
+                  <Banknote className="h-4 w-4 text-muted-foreground" />
+                  <span>₹{profile.annualIncome}</span>
                 </div>
+              )}
+            </div>
+          </div>
 
-                {isEditing && (
-                  <Button onClick={handleProfileUpdate} className="w-full">
-                    Save Changes
-                  </Button>
-                )}
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            {isEditing ? (
+              <Input
+                id="address"
+                value={profile.address}
+                onChange={(e) => setProfile({...profile, address: e.target.value})}
+              />
+            ) : (
+              <div className="flex items-start space-x-2 p-3 bg-muted/20 rounded-md">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <span>{profile.address}</span>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Bell className="h-5 w-5" />
-                <span>Notification Preferences</span>
-              </CardTitle>
-              <CardDescription>Choose how you want to be notified</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(notifications).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">
-                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {key === 'emailAlerts' && 'Receive email notifications for important updates'}
-                        {key === 'smsAlerts' && 'Get SMS alerts for critical transactions'}
-                        {key === 'budgetAlerts' && 'Notifications when approaching budget limits'}
-                        {key === 'goalReminders' && 'Reminders about your financial goals'}
-                        {key === 'transactionAlerts' && 'Instant alerts for all transactions'}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={value}
-                      onCheckedChange={(checked) => handleNotificationUpdate(key, checked)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Account Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Summary</CardTitle>
+          <CardDescription>Quick overview of your financial status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">₹28,47,650</div>
+              <p className="text-sm text-muted-foreground">Account Balance</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-success">₹18,45,230</div>
+              <p className="text-sm text-muted-foreground">Investments</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-warning">₹25,00,000</div>
+              <p className="text-sm text-muted-foreground">Active Loans</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-info">785</div>
+              <p className="text-sm text-muted-foreground">Credit Score</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Account Summary */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Account Summary</span>
-              </CardTitle>
-              <CardDescription>Overview of your SmartBank account</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Balance</span>
-                <span className="font-semibold">₹{accountSummary.totalBalance.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Investments</span>
-                <span className="font-semibold text-success">₹{accountSummary.totalInvestments.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Active Loans</span>
-                <Badge variant="secondary">{accountSummary.activeLoans}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Credit Score</span>
-                <Badge variant="default" className="bg-success text-success-foreground">
-                  {accountSummary.creditScore}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Member Since</span>
-                <span className="text-sm">{new Date(accountSummary.memberSince).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common account actions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start" onClick={downloadStatement}>
-                <Download className="h-4 w-4 mr-2" />
-                Download Statement
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Manage Cards
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Shield className="h-4 w-4 mr-2" />
-                Security Settings
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-2" />
-                Tax Documents
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Need Help?</CardTitle>
-              <CardDescription>Get in touch with our support team</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">1800-123-4567</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">support@smartbank.com</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">24/7 Support Available</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common account management tasks</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button variant="outline" className="h-12">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Download Statement
+            </Button>
+            <Button variant="outline" className="h-12">
+              <User className="h-4 w-4 mr-2" />
+              Update KYC
+            </Button>
+            <Button variant="outline" className="h-12">
+              <Phone className="h-4 w-4 mr-2" />
+              Contact Support
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

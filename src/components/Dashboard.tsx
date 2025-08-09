@@ -7,7 +7,8 @@ import { GoalProgress } from "./GoalProgress";
 import { Wallet, TrendingUp, Target, PiggyBank } from "lucide-react";
 
 const Dashboard = () => {
-  const totalBalance = 2847650;
+  // Simplified to show single account data
+  const accountBalance = 2847650;
   const monthlyChange = 18750;
   const changePercent = 2.4;
 
@@ -27,9 +28,9 @@ const Dashboard = () => {
       <Card className="bg-gradient-primary p-6 border-0 shadow-glow">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <p className="text-primary-foreground/80 text-sm font-medium">Total Net Worth</p>
+            <p className="text-primary-foreground/80 text-sm font-medium">Account Balance</p>
             <p className="text-4xl font-bold text-primary-foreground">
-              ₹{totalBalance.toLocaleString()}
+              ₹{accountBalance.toLocaleString()}
             </p>
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-4 w-4 text-primary-foreground" />
