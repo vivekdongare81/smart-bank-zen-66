@@ -18,14 +18,17 @@ import {
   CheckCircle
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { getCurrentUser, getGoals, addGoal } from "@/lib/storage";
+import { getCurrentUser, getGoals, addGoal, getInvestments } from "@/lib/storage";
+import { investments as investmentData } from "@/data/investments";
 
 const GoalsPage = () => {
   const [goals, setGoals] = useState<any[]>([]);
+  const [userInvestments, setUserInvestments] = useState<any[]>([]);
   const currentUser = getCurrentUser();
 
   useEffect(() => {
     if (currentUser) {
+      // Load user goals
       const userGoals = getGoals().filter(goal => goal.userId === currentUser.id);
       const goalsWithIcons = userGoals.map(goal => ({
         ...goal,
@@ -33,6 +36,10 @@ const GoalsPage = () => {
         timeFrame: Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))
       }));
       setGoals(goalsWithIcons);
+
+      // Load user investments (use dummy data for now, but can be replaced with real data)
+      const investments = investmentData.filter(inv => inv.userId === currentUser.id);
+      setUserInvestments(investments);
     }
   }, [currentUser]);
 
@@ -52,37 +59,84 @@ const GoalsPage = () => {
     { icon: Target, label: "General" }
   ];
 
-  // Simulated investment data
-  const totalInvestments = 1200000;
-  const avgReturnRate = 12; // 12% annual return
+  // Calculate total current investment value and weighted average return
+  const totalCurrentInvestmentValue = userInvestments.reduce((sum, inv) => sum + inv.currentValue, 0);
+  const weightedAvgReturn = userInvestments.length > 0 
+    ? userInvestments.reduce((sum, inv) => sum + (inv.expectedReturn * inv.currentValue), 0) / totalCurrentInvestmentValue
+    : 8; // Default 8% if no investments
 
-  const calculateGoalFeasibility = (targetAmount: number, currentAmount: number, timeFrameMonths: number) => {
+  const calculateAdvancedGoalFeasibility = (targetAmount: number, currentGoalAmount: number, timeFrameMonths: number) => {
     const monthsRemaining = timeFrameMonths;
-    const monthlyReturn = avgReturnRate / 12 / 100;
     
-    // Future value of current amount
-    const futureValueCurrent = currentAmount * Math.pow(1 + monthlyReturn, monthsRemaining);
+    // If no timeframe or past deadline, mark as challenging
+    if (monthsRemaining <= 0) {
+      return {
+        isAchievable: false,
+        monthlyRequired: 0,
+        projectedAmount: currentGoalAmount,
+        shortfall: targetAmount - currentGoalAmount,
+        message: "Goal deadline has passed or is too close",
+        investmentGrowth: 0,
+        totalAvailable: currentGoalAmount,
+        confidence: "Low"
+      };
+    }
+
+    // Calculate projected growth of existing investments
+    const monthlyReturn = weightedAvgReturn / 12 / 100;
+    const projectedInvestmentValue = totalCurrentInvestmentValue * Math.pow(1 + monthlyReturn, monthsRemaining);
     
-    // Required additional amount
-    const requiredAmount = targetAmount - futureValueCurrent;
+    // Add step-up contributions from existing investments
+    let stepUpContributions = 0;
+    userInvestments.forEach(inv => {
+      if (inv.stepUp && inv.stepUpAmount) {
+        // Future value of monthly step-up contributions
+        const monthlyStepUp = inv.stepUpAmount;
+        stepUpContributions += monthlyStepUp * (((Math.pow(1 + monthlyReturn, monthsRemaining) - 1) / monthlyReturn) || monthsRemaining);
+      }
+    });
+
+    // Total available from current goal savings + investment growth + step-ups
+    const futureValueCurrentGoal = currentGoalAmount * Math.pow(1 + monthlyReturn, monthsRemaining);
+    const totalProjectedAmount = projectedInvestmentValue + stepUpContributions + futureValueCurrentGoal;
     
-    if (requiredAmount <= 0) {
+    const shortfall = targetAmount - totalProjectedAmount;
+    
+    if (shortfall <= 0) {
       return {
         isAchievable: true,
         monthlyRequired: 0,
-        message: "Goal achievable with current savings!"
+        projectedAmount: totalProjectedAmount,
+        shortfall: 0,
+        message: "Goal achievable with current investments and savings!",
+        investmentGrowth: projectedInvestmentValue - totalCurrentInvestmentValue,
+        totalAvailable: totalProjectedAmount,
+        confidence: "High"
       };
     }
     
-    // Required monthly investment
-    const monthlyRequired = requiredAmount / (((Math.pow(1 + monthlyReturn, monthsRemaining) - 1) / monthlyReturn) || monthsRemaining);
+    // Calculate additional monthly investment required
+    const monthlyRequired = shortfall / (((Math.pow(1 + monthlyReturn, monthsRemaining) - 1) / monthlyReturn) || monthsRemaining);
+    
+    // Determine feasibility based on monthly capacity (assume max 30% of typical income)
+    const maxMonthlyCapacity = 25000; // Reasonable monthly investment capacity
+    const isAchievable = monthlyRequired <= maxMonthlyCapacity;
+    
+    let confidence = "Medium";
+    if (monthlyRequired <= 10000) confidence = "High";
+    else if (monthlyRequired > 20000) confidence = "Low";
     
     return {
-      isAchievable: monthlyRequired <= 50000, // Assuming max monthly capacity
+      isAchievable,
       monthlyRequired: Math.round(monthlyRequired),
-      message: monthlyRequired <= 50000 
+      projectedAmount: totalProjectedAmount,
+      shortfall: Math.round(shortfall),
+      message: isAchievable 
         ? `Invest ₹${Math.round(monthlyRequired).toLocaleString()} monthly to achieve this goal`
-        : "Goal might be challenging with current timeline"
+        : `Goal requires ₹${Math.round(monthlyRequired).toLocaleString()}/month - consider extending timeline`,
+      investmentGrowth: projectedInvestmentValue - totalCurrentInvestmentValue,
+      totalAvailable: totalProjectedAmount,
+      confidence
     };
   };
 
@@ -163,6 +217,30 @@ const GoalsPage = () => {
         </Button>
       </div>
 
+      {/* Investment Integration Summary */}
+      <Card className="bg-gradient-card border border-border/50 shadow-card">
+        <CardHeader>
+          <CardTitle>Investment Analysis</CardTitle>
+          <CardDescription>How your current investments support your goals</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">₹{totalCurrentInvestmentValue.toLocaleString()}</div>
+              <p className="text-sm text-muted-foreground">Current Investment Value</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-success">{weightedAvgReturn.toFixed(1)}%</div>
+              <p className="text-sm text-muted-foreground">Weighted Avg Return</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-info">{userInvestments.length}</div>
+              <p className="text-sm text-muted-foreground">Active Investments</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Goals Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-card border border-border/50 shadow-card">
@@ -202,7 +280,7 @@ const GoalsPage = () => {
         {goals.map((goal) => {
           const IconComponent = goal.icon;
           const progress = getGoalProgress(goal.currentAmount, goal.targetAmount);
-          const feasibility = calculateGoalFeasibility(goal.targetAmount, goal.currentAmount, goal.timeFrame);
+          const feasibility = calculateAdvancedGoalFeasibility(goal.targetAmount, goal.currentAmount, goal.timeFrame);
           const remainingAmount = goal.targetAmount - goal.currentAmount;
 
           return (
@@ -229,7 +307,7 @@ const GoalsPage = () => {
                     ) : (
                       <AlertTriangle className="h-3 w-3" />
                     )}
-                    <span>{feasibility.isAchievable ? "Achievable" : "Challenging"}</span>
+                    <span>{feasibility.confidence} Confidence</span>
                   </Badge>
                 </div>
               </CardHeader>
@@ -248,7 +326,7 @@ const GoalsPage = () => {
                 </div>
 
                 {/* Goal Details */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border/50">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-border/50">
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div>
@@ -268,17 +346,37 @@ const GoalsPage = () => {
                   <div className="flex items-center space-x-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <p className="text-xs text-muted-foreground">Status</p>
-                      <p className={`text-sm font-medium ${feasibility.isAchievable ? 'text-success' : 'text-destructive'}`}>
-                        {feasibility.isAchievable ? 'On Track' : 'Needs Adjustment'}
+                      <p className="text-xs text-muted-foreground">Projected Total</p>
+                      <p className="text-sm font-medium text-success">
+                        ₹{feasibility.totalAvailable.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Investment Growth</p>
+                      <p className="text-sm font-medium text-info">
+                        ₹{feasibility.investmentGrowth.toLocaleString()}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Recommendation */}
-                <div className="p-3 bg-muted/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground">{feasibility.message}</p>
+                {/* Detailed Analysis */}
+                <div className="p-4 bg-muted/20 rounded-lg space-y-2">
+                  <p className="text-sm font-medium">{feasibility.message}</p>
+                  {feasibility.shortfall > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Shortfall: ₹{feasibility.shortfall.toLocaleString()} • 
+                      Investment growth will contribute ₹{feasibility.investmentGrowth.toLocaleString()}
+                    </p>
+                  )}
+                  {feasibility.isAchievable && feasibility.monthlyRequired === 0 && (
+                    <p className="text-sm text-success">
+                      🎉 Your existing investments will grow to ₹{feasibility.totalAvailable.toLocaleString()} by the deadline!
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
