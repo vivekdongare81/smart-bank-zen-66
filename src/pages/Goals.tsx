@@ -18,30 +18,25 @@ import {
   CheckCircle
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { getCurrentUser, getGoals, addGoal, getInvestments } from "@/lib/storage";
+import { goals as dummyGoals, goalIcons } from "@/data/goals";
 import { investments as investmentData } from "@/data/investments";
 
 const GoalsPage = () => {
   const [goals, setGoals] = useState<any[]>([]);
   const [userInvestments, setUserInvestments] = useState<any[]>([]);
-  const currentUser = getCurrentUser();
 
   useEffect(() => {
-    if (currentUser) {
-      // Load user goals
-      const userGoals = getGoals().filter(goal => goal.userId === currentUser.id);
-      const goalsWithIcons = userGoals.map(goal => ({
-        ...goal,
-        icon: goalIcons.find(g => g.label.toLowerCase() === goal.category?.toLowerCase())?.icon || Target,
-        timeFrame: Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))
-      }));
-      setGoals(goalsWithIcons);
+    // Use dummy data directly
+    const goalsWithIcons = dummyGoals.map(goal => ({
+      ...goal,
+      icon: goalIcons.find(g => g.label.toLowerCase() === goal.category?.toLowerCase())?.icon || Target,
+      timeFrame: Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))
+    }));
+    setGoals(goalsWithIcons);
 
-      // Load user investments (use dummy data for now, but can be replaced with real data)
-      const investments = investmentData.filter(inv => inv.userId === currentUser.id);
-      setUserInvestments(investments);
-    }
-  }, [currentUser]);
+    // Use dummy investment data
+    setUserInvestments(investmentData);
+  }, []);
 
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState({
@@ -51,13 +46,7 @@ const GoalsPage = () => {
     icon: Target
   });
 
-  const goalIcons = [
-    { icon: Car, label: "Car" },
-    { icon: Home, label: "Home" },
-    { icon: GraduationCap, label: "Education" },
-    { icon: Plane, label: "Travel" },
-    { icon: Target, label: "General" }
-  ];
+  // Goal icons are now imported from data file
 
   // Calculate total current investment value and weighted average return
   const totalCurrentInvestmentValue = userInvestments.reduce((sum, inv) => sum + inv.currentValue, 0);
@@ -145,15 +134,6 @@ const GoalsPage = () => {
   };
 
   const handleAddGoal = () => {
-    if (!currentUser) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to add goals.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!newGoal.name || !newGoal.targetAmount || !newGoal.timeFrame) {
       toast({
         title: "Please fill all required fields",
@@ -165,24 +145,17 @@ const GoalsPage = () => {
     const deadline = new Date();
     deadline.setMonth(deadline.getMonth() + parseInt(newGoal.timeFrame));
 
-    const goalData = {
-      userId: currentUser.id,
+    const displayGoal = {
+      id: Date.now().toString(),
+      userId: "1",
       name: newGoal.name,
       targetAmount: parseFloat(newGoal.targetAmount),
       currentAmount: 0,
       deadline: deadline.toISOString(),
       category: goalIcons.find(g => g.icon === newGoal.icon)?.label || 'General',
       priority: 'medium' as const,
-    };
-
-    addGoal(goalData);
-
-    const displayGoal = {
-      ...goalData,
-      id: Date.now(),
       timeFrame: parseInt(newGoal.timeFrame),
       icon: newGoal.icon,
-      createdDate: new Date().toISOString().split('T')[0]
     };
 
     setGoals([...goals, displayGoal]);

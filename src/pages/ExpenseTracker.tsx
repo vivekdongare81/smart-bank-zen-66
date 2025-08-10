@@ -19,79 +19,22 @@ import {
   AlertCircle
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { getCurrentUser, getTransactions, getBudgetLimits, setBudgetLimit, getCurrentMonth } from "@/lib/storage";
+import { expenseTransactions, budgetLimits as dummyBudgetLimits, expenseCategories } from "@/data/expenses";
 
 const ExpenseTrackerPage = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [budgetLimits, setBudgetLimitsState] = useState<any[]>([]);
-  const currentUser = getCurrentUser();
-  const currentMonth = getCurrentMonth();
 
   useEffect(() => {
-    if (currentUser) {
-      // Load transactions
-      const userTransactions = getTransactions()
-        .filter(t => t.userId === currentUser.id)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setTransactions(userTransactions);
-
-      // Load budget limits
-      const userBudgetLimits = getBudgetLimits()
-        .filter(bl => bl.userId === currentUser.id && bl.month === currentMonth);
-      
-      if (userBudgetLimits.length === 0) {
-        // Set default budget limits for new users
-        const defaultLimits = [
-          { category: "Food", limit: 15000 },
-          { category: "Transport", limit: 8000 },
-          { category: "Entertainment", limit: 5000 },
-          { category: "Shopping", limit: 10000 },
-          { category: "Bills", limit: 12000 },
-        ];
-        
-        defaultLimits.forEach(limit => {
-          const spent = userTransactions
-            .filter(t => t.category === limit.category && t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0);
-          
-          setBudgetLimit({
-            userId: currentUser.id,
-            category: limit.category,
-            limit: limit.limit,
-            spent: spent,
-            month: currentMonth
-          });
-        });
-      }
-      
-      // Calculate spent amounts
-      const limitsWithSpent = categories.map(cat => {
-        const existingLimit = userBudgetLimits.find(bl => bl.category === cat.name);
-        const spent = userTransactions
-          .filter(t => t.category === cat.name && t.type === 'expense')
-          .reduce((sum, t) => sum + t.amount, 0);
-        
-        return {
-          category: cat.name,
-          limit: existingLimit?.limit || 10000,
-          spent: spent
-        };
-      });
-      
-      setBudgetLimitsState(limitsWithSpent);
-    }
-  }, [currentUser]);
+    // Use dummy data directly
+    setTransactions(expenseTransactions);
+    setBudgetLimitsState(dummyBudgetLimits);
+  }, []);
 
   const [isSettingLimit, setIsSettingLimit] = useState(false);
   const [newLimit, setNewLimit] = useState({ category: "", limit: "" });
 
-  const categories = [
-    { name: "Food", icon: Utensils, color: "from-green-400 to-green-600" },
-    { name: "Transport", icon: Car, color: "from-blue-400 to-blue-600" },
-    { name: "Entertainment", icon: Gamepad2, color: "from-purple-400 to-purple-600" },
-    { name: "Shopping", icon: ShoppingCart, color: "from-pink-400 to-pink-600" },
-    { name: "Bills", icon: Home, color: "from-orange-400 to-orange-600" },
-  ];
+  const categories = expenseCategories;
 
   const getCategoryIcon = (categoryName: string) => {
     const category = categories.find(cat => cat.name === categoryName);
@@ -118,15 +61,6 @@ const ExpenseTrackerPage = () => {
   const overallPercentage = (totalSpent / totalBudget) * 100;
 
   const handleSetLimit = () => {
-    if (!currentUser) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to set budget limits.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!newLimit.category || !newLimit.limit) {
       toast({
         title: "Please fill all fields",
@@ -138,14 +72,6 @@ const ExpenseTrackerPage = () => {
     const spent = transactions
       .filter(t => t.category === newLimit.category && t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-
-    setBudgetLimit({
-      userId: currentUser.id,
-      category: newLimit.category,
-      limit: parseFloat(newLimit.limit),
-      spent: spent,
-      month: currentMonth
-    });
 
     const existingIndex = budgetLimits.findIndex(item => item.category === newLimit.category);
     

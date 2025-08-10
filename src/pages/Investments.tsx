@@ -17,22 +17,19 @@ import {
   Trash2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { getCurrentUser, getInvestments, addInvestment, updateInvestment } from "@/lib/storage";
+import { investments as dummyInvestments, investmentTypes } from "@/data/investments";
 
 const InvestmentsPage = () => {
   const [investments, setInvestments] = useState<any[]>([]);
-  const currentUser = getCurrentUser();
 
   useEffect(() => {
-    if (currentUser) {
-      const userInvestments = getInvestments().filter(inv => inv.userId === currentUser.id);
-      const investmentsWithIcons = userInvestments.map(inv => ({
-        ...inv,
-        icon: investmentTypes.find(t => t.value === inv.type)?.icon || TrendingUp
-      }));
-      setInvestments(investmentsWithIcons);
-    }
-  }, [currentUser]);
+    // Use dummy data directly
+    const investmentsWithIcons = dummyInvestments.map(inv => ({
+      ...inv,
+      icon: investmentTypes.find(t => t.value === inv.type)?.icon || TrendingUp
+    }));
+    setInvestments(investmentsWithIcons);
+  }, []);
 
   const [isAddingInvestment, setIsAddingInvestment] = useState(false);
   const [newInvestment, setNewInvestment] = useState({
@@ -44,28 +41,13 @@ const InvestmentsPage = () => {
     stepUpAmount: ""
   });
 
-  const investmentTypes = [
-    { value: "mutual-funds", label: "Mutual Funds", icon: TrendingUp, avgReturn: "10-15%" },
-    { value: "bonds", label: "Bonds", icon: Shield, avgReturn: "6-8%" },
-    { value: "eps", label: "EPS", icon: Building2, avgReturn: "8-10%" },
-    { value: "nps", label: "NPS", icon: PiggyBank, avgReturn: "9-12%" },
-    { value: "gold", label: "Gold", icon: Coins, avgReturn: "6-8%" }
-  ];
+  // Investment types are now imported from data file
 
   const calculateAnnualIncome = (amount: number, returnRate: number) => {
     return Math.round((amount * returnRate) / 100);
   };
 
   const handleAddInvestment = () => {
-    if (!currentUser) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to add investments.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!newInvestment.type || !newInvestment.name || !newInvestment.amount || !newInvestment.expectedReturn) {
       toast({
         title: "Please fill all required fields",
@@ -74,21 +56,15 @@ const InvestmentsPage = () => {
       return;
     }
 
-    const investmentData = {
-      userId: currentUser.id,
-      type: newInvestment.type as 'mutual-fund' | 'gold' | 'bonds' | 'eps' | 'nps',
+    const updatedInvestment = {
+      id: Date.now().toString(),
+      userId: "1",
+      type: newInvestment.type as 'mutual-funds' | 'gold' | 'bonds' | 'eps' | 'nps',
       name: newInvestment.name,
       amount: parseFloat(newInvestment.amount),
       currentValue: parseFloat(newInvestment.amount),
       expectedReturn: parseFloat(newInvestment.expectedReturn),
       stepUpAmount: newInvestment.stepUp ? parseFloat(newInvestment.stepUpAmount) || 0 : undefined,
-    };
-
-    addInvestment(investmentData);
-
-    const updatedInvestment = {
-      ...investmentData,
-      id: Date.now().toString(),
       icon: investmentTypes.find(t => t.value === newInvestment.type)?.icon || TrendingUp,
       stepUp: newInvestment.stepUp,
     };
