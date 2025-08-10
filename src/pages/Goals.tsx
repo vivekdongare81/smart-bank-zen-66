@@ -271,85 +271,119 @@ const GoalsPage = () => {
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge 
-                    variant={feasibility.isAchievable ? "default" : "destructive"}
-                    className="flex items-center space-x-1"
-                  >
-                    {feasibility.isAchievable ? (
-                      <CheckCircle className="h-3 w-3" />
-                    ) : (
-                      <AlertTriangle className="h-3 w-3" />
-                    )}
-                    <span>{feasibility.confidence} Confidence</span>
-                  </Badge>
+                  
+                  {/* Investment-Based Goal Status */}
+                  <div className="text-right">
+                    <Badge 
+                      variant={feasibility.isAchievable ? "default" : "destructive"}
+                      className="flex items-center space-x-1 mb-2"
+                    >
+                      {feasibility.isAchievable ? (
+                        <CheckCircle className="h-3 w-3" />
+                      ) : (
+                        <AlertTriangle className="h-3 w-3" />
+                      )}
+                      <span>{feasibility.isAchievable ? "Achievable" : "Challenging"}</span>
+                    </Badge>
+                    <p className="text-xs text-muted-foreground">
+                      {feasibility.confidence} Confidence
+                    </p>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-semibold">{progress.toFixed(1)}%</span>
+              <CardContent className="space-y-6">
+                {/* Investment-Based Feasibility Review */}
+                <div className={`p-4 rounded-lg border ${
+                  feasibility.isAchievable 
+                    ? "bg-success/5 border-success/20" 
+                    : "bg-destructive/5 border-destructive/20"
+                }`}>
+                  <div className="flex items-start space-x-3">
+                    <div className={`p-2 rounded-full ${
+                      feasibility.isAchievable ? "bg-success/10" : "bg-destructive/10"
+                    }`}>
+                      <TrendingUp className={`h-4 w-4 ${
+                        feasibility.isAchievable ? "text-success" : "text-destructive"
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm mb-2">Investment-Based Analysis</h4>
+                      <p className="text-sm mb-3">{feasibility.message}</p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Projected from Investments</p>
+                          <p className="text-sm font-semibold text-success">
+                            ₹{feasibility.investmentGrowth.toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Total Available by Deadline</p>
+                          <p className="text-sm font-semibold text-primary">
+                            ₹{feasibility.totalAvailable.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {feasibility.monthlyRequired > 0 && (
+                        <div className="mt-3 p-2 bg-primary/5 rounded border border-primary/20">
+                          <p className="text-xs text-muted-foreground">Additional Monthly Investment Needed</p>
+                          <p className="text-sm font-semibold text-primary">
+                            ₹{feasibility.monthlyRequired.toLocaleString()}/month
+                          </p>
+                        </div>
+                      )}
+
+                      {feasibility.isAchievable && feasibility.monthlyRequired === 0 && (
+                        <div className="mt-3 p-2 bg-success/5 rounded border border-success/20">
+                          <p className="text-sm text-success font-medium">
+                            🎉 Goal achievable with current investment growth!
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <Progress value={progress} className="h-3" />
+                </div>
+
+                {/* Current Progress */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Current Savings Progress</h4>
+                    <span className="text-sm font-medium">{progress.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-success">₹{goal.currentAmount.toLocaleString()}</span>
+                    <span className="text-success">₹{goal.currentAmount.toLocaleString()} saved</span>
                     <span className="text-muted-foreground">₹{remainingAmount.toLocaleString()} remaining</span>
                   </div>
                 </div>
 
-                {/* Goal Details */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-border/50">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Time Frame</p>
-                      <p className="text-sm font-medium">{goal.timeFrame} months</p>
-                    </div>
+                {/* Key Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/20">
+                  <div className="text-center">
+                    <Calendar className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Timeline</p>
+                    <p className="text-sm font-medium">{goal.timeFrame}m</p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Monthly Required</p>
-                      <p className="text-sm font-medium text-primary">
-                        ₹{feasibility.monthlyRequired.toLocaleString()}
-                      </p>
-                    </div>
+                  <div className="text-center">
+                    <TrendingUp className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Avg Return</p>
+                    <p className="text-sm font-medium">{weightedAvgReturn.toFixed(1)}%</p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Projected Total</p>
-                      <p className="text-sm font-medium text-success">
-                        ₹{feasibility.totalAvailable.toLocaleString()}
-                      </p>
-                    </div>
+                  <div className="text-center">
+                    <Target className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Target</p>
+                    <p className="text-sm font-medium">₹{(goal.targetAmount / 100000).toFixed(1)}L</p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Investment Growth</p>
-                      <p className="text-sm font-medium text-info">
-                        ₹{feasibility.investmentGrowth.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Detailed Analysis */}
-                <div className="p-4 bg-muted/20 rounded-lg space-y-2">
-                  <p className="text-sm font-medium">{feasibility.message}</p>
-                  {feasibility.shortfall > 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Shortfall: ₹{feasibility.shortfall.toLocaleString()} • 
-                      Investment growth will contribute ₹{feasibility.investmentGrowth.toLocaleString()}
+                  <div className="text-center">
+                    <CheckCircle className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className={`text-sm font-medium ${
+                      feasibility.isAchievable ? "text-success" : "text-destructive"
+                    }`}>
+                      {feasibility.isAchievable ? "On Track" : "At Risk"}
                     </p>
-                  )}
-                  {feasibility.isAchievable && feasibility.monthlyRequired === 0 && (
-                    <p className="text-sm text-success">
-                      🎉 Your existing investments will grow to ₹{feasibility.totalAvailable.toLocaleString()} by the deadline!
-                    </p>
-                  )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
